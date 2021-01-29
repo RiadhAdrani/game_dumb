@@ -22,15 +22,13 @@ public class Player : MonoBehaviour
     public float speed = 5f;
 
     /// <summary>
-    /// Rotation speed, allowing the player to rotate faster or slower.
-    /// </summary>
-    public float rotation = 0f;
-
-    /// <summary>
     /// jump force, allowing the player to jump depending on this value.
     /// </summary>
     public float jump = 5f;
 
+    /// <summary>
+    /// Player velocity, indicates how much force is applied vertically.
+    /// </summary>
     public Vector3 velocity = Vector3.zero;
 
     /// <summary>
@@ -38,14 +36,30 @@ public class Player : MonoBehaviour
     /// </summary>
     public GameObject groundCheck = null;
 
+    /// <summary>
+    /// The radius of the circle in which the ground check will be performed.
+    /// </summary>
     public float groundCheckRadius = 0.4f;
 
+    /// <summary>
+    /// Layer mask of everything supposed to be ground.
+    /// </summary>
     public LayerMask groundMask;
 
+    /// <summary>
+    /// Mouse sensitivity indicating how much the player can rotate himself and the camera.
+    /// </summary>
     public float mouseSensitivity = 100f;
 
+    /// <summary>
+    /// Contains value of the rotation according to the "X" axis.
+    /// </summary>
     public float xRotation = 0f;
 
+    public Weapon weapon = null;
+
+    
+    public float lastFireTime = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -57,6 +71,12 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            shoot();
+        }
+
         float z = Input.GetAxis("Vertical");
         float x = Input.GetAxis("Horizontal");
 
@@ -87,9 +107,32 @@ public class Player : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    /// <summary>
+    /// Check if the player is grounded or not.
+    /// </summary>
+    /// <returns>true if the ground is detected, otherwise false.</returns>
     private bool isGrounded()
     {
         return Physics.CheckSphere(groundCheck.transform.position, groundCheckRadius, groundMask);
+    }
+
+    private void shoot()
+    {
+        if (Time.time > lastFireTime + weapon.fireRate)
+        {
+            var obj = Instantiate(weapon.bullet, weapon.tip.transform.position, Quaternion.Euler(0, 0, 90));
+            var rb = obj.GetComponent<Rigidbody>();
+
+            weapon.destroyBullet(obj, 4f);
+            
+            if (rb != null)
+            {
+                rb.AddForce(cam.transform.forward * weapon.bulletForce);
+            }
+
+            lastFireTime = Time.time;
+        }
+        
     }
 
 }
